@@ -28,5 +28,5 @@ jobs:
           context: .
           push: true
           tags: |
-            YOUR_DOCKERHUB_USERNAME/secure-crud:latest
-            YOUR_DOCKERHUB_USERNAME/secure-crud:${{ github.sha }}
+            shwetanktripathi/secure-crud:latest
+            shwetanktripathi/secure-crud:${{ github.sha }}
