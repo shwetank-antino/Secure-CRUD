@@ -7,6 +7,8 @@ app.use(express.json());
 
 app.use('/tasks', tasksRouter);
 
+console.log('Health check endpoint added at /health');
+
 app.get('/health', (req, res) => {
   res.json({ status: 200, message: 'OK' });
 });
