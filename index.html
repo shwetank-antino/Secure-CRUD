@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Secure CRUD Tasks</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+    }
+    h1 {
+      text-align: center;
+    }
+    input, button {
+      padding: 6px;
+      margin-right: 5px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 8px 0;
+      padding: 6px;
+      border-bottom: 1px solid #ddd;
+    }
+    .completed {
+      text-decoration: line-through;
+      color: gray;
+    }
+    small {
+      color: #666;
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Tasks</h1>
+
+<input id="taskInput" placeholder="New task title" />
+<button onclick="createTask()">Add</button>
+
+<ul id="taskList"></ul>
+
+<script>
+  async function fetchTasks() {
+    const res = await fetch('/tasks');
+    const tasks = await res.json();
+
+    const list = document.getElementById('taskList');
+    list.innerHTML = '';
+
+    tasks.forEach(task => {
+      const li = document.createElement('li');
+
+      const left = document.createElement('div');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = task.completed;
+      checkbox.onchange = () => toggleTask(task.id, checkbox.checked);
+
+      const titleSpan = document.createElement('span');
+      titleSpan.textContent = ' ' + task.title;
+      if (task.completed) titleSpan.classList.add('completed');
+
+      const meta = document.createElement('small');
+      meta.textContent = `(${new Date(task.created_at).toLocaleString()})`;
+
+      left.appendChild(checkbox);
+      left.appendChild(titleSpan);
+      left.appendChild(meta);
+
+      const actions = document.createElement('div');
+
+      const editBtn = document.createElement('button');
+      editBtn.textContent = 'Edit';
+      editBtn.onclick = () => startEdit(task, li);
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => deleteTask(task.id);
+
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+
+      li.appendChild(left);
+      li.appendChild(actions);
+      list.appendChild(li);
+    });
+  }
+
+  function startEdit(task, li) {
+    li.innerHTML = '';
+
+    const input = document.createElement('input');
+    input.value = task.title;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.onclick = async () => {
+      const newTitle = input.value.trim();
+      if (!newTitle) return;
+
+      await fetch(`/tasks/${task.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle })
+      });
+
+      fetchTasks();
+    };
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = fetchTasks;
+
+    li.appendChild(input);
+    li.appendChild(saveBtn);
+    li.appendChild(cancelBtn);
+  }
+
+  async function createTask() {
+    const input = document.getElementById('taskInput');
+    const title = input.value.trim();
+    if (!title) return;
+
+    await fetch('/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title })
+    });
+
+    input.value = '';
+    fetchTasks();
+  }
+
+  async function toggleTask(id, completed) {
+    await fetch(`/tasks/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ completed })
+    });
+
+    fetchTasks();
+  }
+
+  async function deleteTask(id) {
+    await fetch(`/tasks/${id}`, {
+      method: 'DELETE'
+    });
+
+    fetchTasks();
+  }
+
+  fetchTasks();
+</script>
+
+</body>
+</html>
